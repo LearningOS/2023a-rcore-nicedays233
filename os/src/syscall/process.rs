@@ -1,14 +1,16 @@
 //! Process management syscalls
 use crate::{
     config::MAX_SYSCALL_NUM,
-    task::{exit_current_and_run_next, suspend_current_and_run_next, TaskStatus},
+    task::{exit_current_and_run_next, suspend_current_and_run_next, TaskStatus, set_task_info},
     timer::get_time_us,
 };
-
+///
 #[repr(C)]
 #[derive(Debug)]
 pub struct TimeVal {
+    ///
     pub sec: usize,
+    ///
     pub usec: usize,
 }
 
@@ -21,6 +23,46 @@ pub struct TaskInfo {
     syscall_times: [u32; MAX_SYSCALL_NUM],
     /// Total running time of task
     time: usize,
+}
+///
+impl TaskInfo {
+    /// Getter for status
+    pub fn get_status(&self) -> &TaskStatus {
+        &self.status
+    }
+
+    /// Setter for status
+    pub fn set_status(&mut self, new_status: TaskStatus) {
+        self.status = new_status;
+    }
+
+    /// Getter for syscall_times
+    pub fn get_syscall_times(&self) -> &[u32; MAX_SYSCALL_NUM] {
+        &self.syscall_times
+    }
+    ///
+    pub fn set_syscall_times(&mut self, new_values: &[u32; MAX_SYSCALL_NUM]) {
+        self.syscall_times.copy_from_slice(new_values);
+    }
+
+    /// Method to increment a syscall_time by index
+    pub fn increment_syscall_time(&mut self, index: usize) {
+        if index < MAX_SYSCALL_NUM {
+            self.syscall_times[index] += 1;
+        } else {
+            panic!("Index out of bounds");
+        }
+    }
+
+    /// Getter for time
+    pub fn get_time(&self) -> usize {
+        self.time
+    }
+
+    /// Setter for time
+    pub fn set_time(&mut self, new_time: usize) {
+        self.time = new_time;
+    }
 }
 
 /// task exits and submit an exit code
@@ -52,6 +94,10 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 
 /// YOUR JOB: Finish sys_task_info to pass testcases
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
-    trace!("kernel: sys_task_info");
-    -1
+    set_task_info(_ti);
+
+    0  // Return 0 for success
+
+    // trace!("kernel: sys_task_info");
+    // -1
 }
